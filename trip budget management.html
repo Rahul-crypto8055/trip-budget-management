@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Budget Manager - Final Integrated Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #f0f4f8;
+        }
+
+        /* Background Image Styling */
+        .bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.pixabay.com/photo/2018/01/14/23/12/nature-3082832_1280.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(-5px);
+        }
+
+        /* Glassmorphism Card Effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+        }
+
+        /* Form Inputs */
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 0.25rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1;
+            background-color: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #f97316; /* Orange-500 */
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Accordion Styles for FAQ */
+        details > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        /* Fade In Animation */
+        .hidden-section {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Gallery Card Styles */
+        .gallery-card {
+            background-size: cover;
+            background-position: center;
+            height: 150px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+            transition: transform 0.3s;
+        }
+
+        .gallery-card:hover {
+            transform: scale(1.05);
+        }
+
+        /* Print Styles */
+        @media print {
+            body { background: none; }
+            .bg-image, .bg-overlay { display: none; }
+            .glass-card {
+                background: white !important;
+                backdrop-filter: none !important;
+                box-shadow: none !important;
+                border: 1px solid #ccc;
+            }
+            #dashboard button, #dashboard .glass-card:first-child .mt-4 { display: none; }
+            #dashboard { max-width: none !important; width: 100% !important; }
+            .lg\:col-span-2 { grid-column: span 3 / span 3; }
+            #transaction-list { max-height: none !important; overflow: visible !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-image">
+        <div class="bg-overlay"></div>
+    </div>
+
+    <div class="relative min-h-screen flex items-center justify-center p-4 md:p-8">
+        
+        <div id="landingPage" class="glass-card w-full max-w-5xl rounded-2xl p-8 md:p-12 transform transition-all fade-in">
+            <div class="text-center mb-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 text-orange-600 mb-6 shadow-sm">
+                    <i data-lucide="compass" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-4 tracking-tight">Trip Budget Manager</h1>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                    Your personal companion for planning adventures. Track expenses, manage daily allowances, and log your travel costs seamlessly.
+                </p>
+                
+                <div id="landingButtons" class="flex flex-col md:flex-row gap-4 justify-center mt-8">
+                    <button onclick="showLogin()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-lg transform hover:scale-105">
+                        <i data-lucide="log-in" class="w-5 h-5"></i> Log In to Start
+                    </button>
+                    <button onclick="showRegistration(true)" class="bg-white hover:bg-slate-50 text-slate-700 font-bold py-4 px-8 rounded-xl transition-all shadow-lg shadow-slate-200/50 flex items-center justify-center gap-2 text-lg transform hover:scale-105 border border-slate-200">
+                        <i data-lucide="user-plus" class="w-5 h-5"></i> Register New User
+                    </button>
+                    <button id="galleryButton" onclick="toggleGallery()" class="bg-white hover:bg-slate-50 text-orange-600 font-bold py-4 px-8 rounded-xl transition-all shadow-lg shadow-slate-200/50 flex items-center justify-center gap-2 text-lg transform hover:scale-105 border border-orange-200">
+                        <i data-lucide="image" class="w-5 h-5"></i> View Temple Gallery
+                    </button>
+                </div>
+            </div>
+
+            <div id="imageGallery" class="hidden-section mb-12 pt-8 border-t border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">Featured Pilgrimage Temples</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="gallery-card shadow-lg" style="background-image: url('https://uttarakhandtourism.gov.in/assets/media/UTDB_media_1736325021Kedarnath_Temple.jpg');">
+                        <span class="font-bold text-sm">Kedarnath Temple</span>
+                    </div>
+                    <div class="gallery-card shadow-lg" style="background-image: url('https://thefoodtravellers.com/wp-content/uploads/2024/11/Shree-Ram-Mandir-Ayodhya-The-Food-Travellers.jpg');">
+                        <span class="font-bold text-sm">Ram Mandir, Ayodhya</span>
+                    </div>
+                    <div class="gallery-card shadow-lg" style="background-image: url('https://c.ndtvimg.com/2025-01/fg23ket8_tirumala-temple_625x300_09_January_25.jpeg?im=FeatureCrop,algorithm=dnn,width=545,height=307');">
+                        <span class="font-bold text-sm">Tirupati Temple</span>
+                    </div>
+                    <div class="gallery-card shadow-lg" style="background-image: url('https://carams.in/wp-content/uploads/2018/11/murudeshwara.jpg');">
+                        <span class="font-bold text-sm">Murudeshwara Temple</span>
+                    </div>
+                    <div class="gallery-card shadow-lg" style="background-image: url('https://thegreenfortune.com/wp-content/uploads/2025/09/download-1.jpeg');">
+                        <span class="font-bold text-sm">Puri Jagannath Temple</span>
+                    </div>
+                    <div class="gallery-card shadow-lg" style="background-image: url('https://nijagunaresorts.com/wp-content/uploads/2024/08/Male-Mahadeshwara-Hills-MM-Hills-2-1024x576-1.webp');">
+                        <span class="font-bold text-sm">MM Hills Temple</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 border-t border-slate-200 pt-12 mt-12">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="info" class="w-5 h-5 text-orange-500"></i> About Trip Budget Manager
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed text-sm">
+                        We are a passionate team of travelers and developers dedicated to making financial planning for trips as breathtaking as the destinations themselves. Our tool simplifies complex budget tracking into an intuitive, visual experience, ensuring you focus on the memories, not the math.
+                    </p>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5 text-orange-500"></i> Terms & Conditions
+                    </h2>
+                    <p class="text-slate-600 leading-relaxed text-sm">
+                        By using the Trip Budget Manager, you agree that all budget calculations are estimates. We do not store your personal ID data (Passport/Aadhar) on any server; all data remains local to your current browser session for privacy. Please travel responsibly.
+                    </p>
+                </div>
+            </div>
+            <div class="border-t border-slate-200 pt-8 mt-4">
+                <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2 justify-center">
+                    <i data-lucide="help-circle" class="w-5 h-5 text-orange-500"></i> Frequently Asked Questions
+                </h2>
+                <div class="space-y-3 max-w-3xl mx-auto">
+                    <details class="group">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                            <span>Is this tool free to use?</span>
+                            <span class="transition group-open:rotate-180">
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
+                            </span>
+                        </summary>
+                        <div class="text-slate-600 mt-2 px-4 pb-4 text-sm leading-relaxed">
+                            Absolutely! The Trip Budget Manager is completely free for all users to help you plan your next adventure.
+                        </div>
+                    </details>
+                    
+                    <details class="group">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                            <span>Is my personal data safe?</span>
+                            <span class="transition group-open:rotate-180">
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
+                            </span>
+                        </summary>
+                        <div class="text-slate-600 mt-2 px-4 pb-4 text-sm leading-relaxed">
+                            Yes. We prioritize privacy. All budget data and your login hash are saved **locally to your browser's storage** and are not sent to any external server.
+                        </div>
+                    </details>
+                </div>
+            </div>
+            </div>
+
+        <div id="loginPage" class="hidden-section glass-card w-full max-w-md rounded-2xl p-8 transform transition-all">
+            <div class="mb-6">
+                <button onclick="showLanding()" class="text-sm text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Home
+                </button>
+            </div>
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 text-orange-600 mb-4">
+                    <i data-lucide="user-check" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800">Welcome Back</h1>
+                <p class="text-slate-600 mt-2">Enter your credentials to manage your trip.</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" required placeholder="Your registered username">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" required placeholder="Your password">
+                </div>
+                
+                <div class="text-right">
+                    <button type="button" onclick="handleForgotPassword()" class="text-xs text-orange-600 hover:text-orange-700 font-medium transition-colors">
+                        Forgot Password?
+                    </button>
+                </div>
+
+                <button type="submit" class="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2">
+                    Secure Login <i data-lucide="unlock" class="w-5 h-5"></i>
+                </button>
+            </form>
+            
+            <p class="text-center text-sm text-slate-500 mt-4">
+                Don't have an account? 
+                <button onclick="showRegistration(false)" class="text-orange-600 hover:text-orange-700 font-medium">Register here</button>
+            </p>
+            <p id="login-error" class="text-center text-red-500 text-sm mt-3 hidden">Invalid username or password.</p>
+        </div>
+
+        <div id="registerPage" class="hidden-section glass-card w-full max-w-md rounded-2xl p-8 transform transition-all">
+            <div class="mb-6">
+                <button onclick="showLogin()" class="text-sm text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Login
+                </button>
+            </div>
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 text-orange-600 mb-4">
+                    <i data-lucide="pencil-line" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800">Create Account</h1>
+                <p class="text-slate-600 mt-2">Your credentials will be saved locally.</p>
+            </div>
+
+            <form id="registerForm" onsubmit="handleRegistration(event)" class="space-y-4">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="reg-username" required placeholder="Choose a username">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-password" required placeholder="Secure password">
+                </div>
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="reg-password-confirm" required placeholder="Confirm secure password">
+                </div>
+                <button type="submit" class="w-full mt-6 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2">
+                    Register & Continue <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+            <p id="reg-error" class="text-center text-red-500 text-sm mt-3 hidden"></p>
+        </div>
+
+        <div id="destinationSelectionPage" class="hidden-section glass-card w-full max-w-5xl rounded-2xl p-8 md:p-12 transform transition-all">
+            <div class="mb-6">
+                <button onclick="logout()" class="text-sm text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                </button>
+            </div>
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 text-orange-600 mb-4">
+                    <i data-lucide="map-pin" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800">Plan Your Route</h1>
+                <p class="text-slate-600 mt-2">Where are you traveling from and to?</p>
+            </div>
+
+            <form id="routeForm" onsubmit="handleRouteSelection(event)" class="max-w-2xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                        <label for="route-source">Source City (Departure)</label>
+                        <input type="text" id="route-source" required placeholder="e.g. Delhi, India">
+                    </div>
+                    <div class="input-group">
+                        <label for="route-destination">Destination City</label>
+                        <input type="text" id="route-destination" required placeholder="e.g. Kedarnath, Uttarakhand">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full mt-6 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2">
+                    Confirm Route & Continue <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+            
+            <div class="my-10 flex items-center max-w-2xl mx-auto">
+                <div class="flex-grow border-t border-slate-300"></div>
+                <span class="flex-shrink mx-4 text-slate-500 text-sm font-medium">OR QUICK SELECT</span>
+                <div class="flex-grow border-t border-slate-300"></div>
+            </div>
+
+            <div class="input-group max-w-2xl mx-auto mb-10">
+                <label for="preferred-source" class="text-lg font-bold text-orange-600 flex items-center gap-2">
+                    <i data-lucide="home" class="w-5 h-5"></i> Enter Your Departure City First
+                </label>
+                <input type="text" id="preferred-source" placeholder="e.g. Mumbai, Chennai" class="p-3 text-lg" required>
+            </div>
+
+
+            <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Popular Pilgrimage Destinations</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <div class="relative group overflow-hidden rounded-xl shadow-md cursor-pointer transition-transform hover:scale-[1.02]" onclick="handleGallerySelection('Delhi', 'Kedarnath', 50000)">
+                    <img src="https://uttarakhandtourism.gov.in/assets/media/UTDB_media_1736325021Kedarnath_Temple.jpg" alt="Kedarnath" class="w-full h-40 object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h4 class="text-md font-bold">Kedarnath</h4>
+                        <p class="text-xs opacity-80">Suggested Budget: ₹50,000</p>
+                    </div>
+                </div>
+                <div class="relative group overflow-hidden rounded-xl shadow-md cursor-pointer transition-transform hover:scale-[1.02]" onclick="handleGallerySelection('Chennai', 'Tirupati', 20000)">
+                    <img src="https://c.ndtvimg.com/2025-01/fg23ket8_tirumala-temple_625x300_09_January_25.jpeg?im=FeatureCrop,algorithm=dnn,width=545,height=307" alt="Tirupati" class="w-full h-40 object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h4 class="text-md font-bold">Tirupati</h4>
+                        <p class="text-xs opacity-80">Suggested Budget: ₹20,000</p>
+                    </div>
+                </div>
+                <div class="relative group overflow-hidden rounded-xl shadow-md cursor-pointer transition-transform hover:scale-[1.02]" onclick="handleGallerySelection('Lucknow', 'Ram Mandir, Ayodhya', 30000)">
+                    <img src="https://thefoodtravellers.com/wp-content/uploads/2024/11/Shree-Ram-Mandir-Ayodhya-The-Food-Travellers.jpg" alt="Ram Mandir Ayodhya" class="w-full h-40 object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h4 class="text-md font-bold">Ram Mandir, Ayodhya</h4>
+                        <p class="text-xs opacity-80">Suggested Budget: ₹30,000</p>
+                    </div>
+                </div>
+
+                <div class="relative group overflow-hidden rounded-xl shadow-md cursor-pointer transition-transform hover:scale-[1.02]" onclick="handleGallerySelection('Bengaluru', 'Murudeshwara', 15000)">
+                    <img src="https://carams.in/wp-content/uploads/2018/11/murudeshwara.jpg" alt="Murudeshwara" class="w-full h-40 object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h4 class="text-md font-bold">Murudeshwara</h4>
+                        <p class="text-xs opacity-80">Suggested Budget: ₹15,000</p>
+                    </div>
+                </div>
+                
+                <div class="relative group overflow-hidden rounded-xl shadow-md cursor-pointer transition-transform hover:scale-[1.02]" onclick="handleGallerySelection('Kolkata', 'Jagannath Puri', 40000)">
+                    <img src="https://thegreenfortune.com/wp-content/uploads/2025/09/download-1.jpeg" alt="Puri Jagannath Mandir" class="w-full h-40 object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h4 class="text-md font-bold">Jagannath Puri</h4>
+                        <p class="text-xs opacity-80">Suggested Budget: ₹40,000</p>
+                    </div>
+                </div>
+
+                <div class="relative group overflow-hidden rounded-xl shadow-md cursor-pointer transition-transform hover:scale-[1.02]" onclick="handleGallerySelection('Bengaluru', 'MM Hills, Karnataka', 10000)">
+                    <img src="https://nijagunaresorts.com/wp-content/uploads/2024/08/Male-Mahadeshwara-Hills-MM-Hills-2-1024x576-1.webp" alt="Male Mahadeshwara Hills" class="w-full h-40 object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90"></div>
+                    <div class="absolute bottom-4 left-4 text-white">
+                        <h4 class="text-md font-bold">MM Hills</h4>
+                        <p class="text-xs opacity-80">Suggested Budget: ₹10,000</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div id="tripSetupForm" class="hidden-section glass-card w-full max-w-2xl rounded-2xl p-8 transform transition-all">
+            <div class="mb-6">
+                <button onclick="showDestinationSelection()" class="text-sm text-slate-500 hover:text-orange-600 flex items-center gap-1 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Route Selection
+                </button>
+            </div>
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 text-orange-600 mb-4">
+                    <i data-lucide="mountain-snow" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-800">Plan Your Adventure</h1>
+                <p class="text-slate-600 mt-2">Enter your personal and budget details.</p>
+            </div>
+
+            <form id="tripForm" onsubmit="handleTripFormSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="name" required placeholder="e.g. John Doe">
+                    </div>
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="number" id="age" min="1" max="120" required placeholder="e.g. 28">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Source City (Departure)</label>
+                        <input type="text" id="source-city" readonly class="bg-gray-100 cursor-not-allowed text-slate-600" value="Source">
+                    </div>
+                    <div class="input-group">
+                        <label>Destination</label>
+                        <input type="text" id="destination-display" readonly class="bg-gray-100 cursor-not-allowed text-slate-600" value="Destination"> 
+                    </div>
+                    <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" required placeholder="e.g. +91 98765 43210">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Passport Number</label>
+                        <input type="text" id="passport" placeholder="Optional if domestic">
+                    </div>
+                    <div class="input-group">
+                        <label>Aadhar Card Number</label>
+                        <input type="text" id="aadhar" required placeholder="12-digit number">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Duration (Days)</label>
+                        <input type="number" id="days" min="1" required placeholder="e.g. 5">
+                    </div>
+                    <div class="input-group md:col-span-2">
+                        <label>Total Budget (Currency)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-slate-500 font-bold">₹</span>
+                            <input type="number" id="budget" min="1" required class="pl-8" placeholder="e.g. 50000">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-start">
+                    <input type="checkbox" id="agree-terms" required class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500">
+                    <label for="agree-terms" class="ml-2 text-sm text-slate-600">
+                        I agree to the 
+                        <a href="#" onclick="alertTerms(event)" class="text-orange-600 hover:text-orange-700 font-medium underline">Terms and Conditions</a> 
+                        and Privacy Policy.
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2">
+                    Generate Dashboard <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+
+        <div id="dashboard" class="hidden-section w-full max-w-5xl">
+            <div class="glass-card rounded-2xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center text-slate-800">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="map" class="text-orange-600"></i>
+                        <span id="dashboard-title">Trip Route</span>
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Traveler: <span id="display-name">User</span> | 
+                        <span id="display-days">0</span> Days | 
+                        ID: <span id="display-id">****</span>
+                    </p>
+                </div>
+                <div class="mt-4 md:mt-0 flex gap-3">
+                    <button onclick="resetApp()" class="px-4 py-2 text-sm bg-slate-200 hover:bg-slate-300 rounded-lg transition-colors font-medium">Edit Details</button>
+                    <button onclick="printReport()" class="px-4 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors font-medium flex items-center gap-2">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Save
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-card rounded-2xl p-6 text-center">
+                        <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-2">Total Budget</h3>
+                        <div class="text-4xl font-bold text-slate-800 mb-1" id="display-total-budget">₹0</div>
+                        <div class="text-xs text-slate-500">Fixed</div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6 text-center relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gray-200">
+                            <div id="progress-bar" class="h-full bg-emerald-500 transition-all duration-5-00" style="width: 100%"></div>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-2">Remaining</h3>
+                        <div class="text-4xl font-bold text-emerald-600 mb-1" id="display-remaining">₹0</div>
+                        <p class="text-sm text-slate-600 mt-2">
+                            Daily Allowance: <span class="font-bold text-orange-600" id="display-daily">₹0</span> / day
+                        </p>
+                    </div>
+
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="text-orange-500"></i> Add Expense
+                        </h3>
+                        <form onsubmit="handleAddExpense(event)" class="space-y-3">
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <i data-lucide="tag" class="w-4 h-4 text-orange-500"></i>
+                                </div>
+                                <select id="expense-category" class="w-full p-2 pl-10 border rounded-lg bg-white/80 text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none cursor-pointer">
+                                    <option value="General">General Expense</option>
+                                    <optgroup label="Transportation">
+                                        <option value="Train">🚆 Train</option>
+                                        <option value="Bus">🚌 Bus</option>
+                                        <option value="Flight">✈️ Flight</option>
+                                        <option value="Cab">🚖 Taxi / Cab</option>
+                                        <option value="Fuel">⛽ Fuel / Petrol</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="Food">🍔 Food</option>
+                                        <option value="Stay">🏨 Hotel / Stay</option>
+                                        <option value="Shopping">🛍️ Shopping</option>
+                                    </optgroup>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                                </div>
+                            </div>
+
+                            <input type="text" id="expense-desc" placeholder="Details (e.g. Ticket from Delhi)" class="w-full p-2 border rounded-lg bg-white/80 focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                            
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-slate-500">₹</span>
+                                <input type="number" id="expense-amount" placeholder="Charges" class="w-full p-2 pl-7 border rounded-lg bg-white/80 focus:outline-none focus:ring-2 focus:ring-orange-500" required min="1">
+                            </div>
+
+                            <button type="submit" class="w-full bg-slate-800 text-white py-2 rounded-lg font-medium hover:bg-slate-900 transition flex justify-center items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Add Charge
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 glass-card rounded-2xl p-6 flex flex-col h-[600px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-lg text-slate-800">Expense History</h3>
+                        <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium" id="expense-count">0 items</span>
+                    </div>
+                    
+                    <div class="overflow-y-auto flex-1 pr-2" id="transaction-list">
+                        <div id="empty-state" class="flex flex-col items-center justify-center h-full text-slate-400">
+                            <i data-lucide="wallet" class="w-12 h-12 mb-2 opacity-50"></i>
+                            <p>No expenses added yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- State Management ---
+        let tripData = {
+            budget: 0,
+            spent: 0,
+            days: 0,
+            expenses: []
+        };
+        let currentUser = null; 
+        let currentSource = null;
+        let currentDestination = null;
+
+        // --- DOM Elements ---
+        const landingPage = document.getElementById('landingPage');
+        const loginPage = document.getElementById('loginPage');
+        const registerPage = document.getElementById('registerPage');
+        const destinationSelectionPage = document.getElementById('destinationSelectionPage'); 
+        const tripSetupForm = document.getElementById('tripSetupForm');
+        const dashboardSection = document.getElementById('dashboard');
+        
+        // Gallery Elements
+        const imageGallery = document.getElementById('imageGallery');
+        const galleryButton = document.getElementById('galleryButton');
+        
+        // Dashboard Elements
+        const transactionList = document.getElementById('transaction-list');
+        const emptyState = document.getElementById('empty-state');
+        const progressBar = document.getElementById('progress-bar');
+        const landingButtons = document.getElementById('landingButtons');
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // --- Utility Function (Simple Hash) ---
+        function simpleHash(str) {
+            let hash = 0;
+            if (str.length === 0) return hash;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash |= 0; 
+            }
+            return hash;
+        }
+
+        // --- Navigation Functions ---
+        function hideAll() {
+            [landingPage, loginPage, registerPage, destinationSelectionPage, tripSetupForm, dashboardSection].forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('fade-in');
+            });
+        }
+
+        function showLanding() {
+            hideAll();
+            landingPage.style.display = 'block';
+            landingPage.classList.add('fade-in');
+            landingButtons.style.display = 'flex'; 
+            imageGallery.style.display = 'none';
+            galleryButton.innerHTML = '<i data-lucide="image" class="w-5 h-5"></i> View Temple Gallery';
+            lucide.createIcons();
+        }
+        
+        function toggleGallery() {
+            if (imageGallery.style.display === 'none' || imageGallery.style.display === '') {
+                imageGallery.style.display = 'block';
+                imageGallery.classList.add('fade-in');
+                galleryButton.innerHTML = '<i data-lucide="image" class="w-5 h-5"></i> Hide Temple Gallery';
+            } else {
+                imageGallery.style.display = 'none';
+                galleryButton.innerHTML = '<i data-lucide="image" class="w-5 h-5"></i> View Temple Gallery';
+            }
+            lucide.createIcons();
+        }
+
+        function showLogin() {
+            hideAll();
+            loginPage.style.display = 'block';
+            loginPage.classList.add('fade-in');
+            document.getElementById('login-error').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function showRegistration(fromLanding = false) {
+            hideAll();
+            registerPage.style.display = 'block';
+            registerPage.classList.add('fade-in');
+            document.getElementById('reg-error').classList.add('hidden');
+            const backButton = registerPage.querySelector('button[onclick="showLogin()"]');
+            
+            if(fromLanding) {
+                backButton.onclick = showLanding;
+                backButton.innerHTML = '<i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Home';
+            } else {
+                backButton.onclick = showLogin;
+                backButton.innerHTML = '<i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Login';
+            }
+            lucide.createIcons();
+        }
+
+        function showDestinationSelection() {
+            hideAll();
+            destinationSelectionPage.style.display = 'block'; 
+            destinationSelectionPage.classList.add('fade-in');
+            document.getElementById('routeForm').reset();
+            lucide.createIcons();
+        }
+
+        function showTripSetup() {
+            hideAll();
+            tripSetupForm.style.display = 'block';
+            tripSetupForm.classList.add('fade-in');
+            document.getElementById('source-city').value = currentSource || 'N/A';
+            document.getElementById('destination-display').value = currentDestination || 'N/A';
+            tripSetupForm.querySelector('button').onclick = showDestinationSelection;
+            tripSetupForm.querySelector('button').innerHTML = '<i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Route Selection';
+            lucide.createIcons();
+        }
+
+        function showDashboard(clearTripForm = true) {
+            if(clearTripForm) document.getElementById('tripForm').reset(); 
+            hideAll();
+            dashboardSection.style.display = 'block';
+            dashboardSection.classList.add('fade-in');
+            lucide.createIcons(); 
+        }
+        
+        // --- Handlers ---
+        function handleRouteSelection(e) {
+            e.preventDefault();
+            const source = document.getElementById('route-source').value.trim();
+            const destination = document.getElementById('route-destination').value.trim();
+            if (source && destination) {
+                currentSource = source;
+                currentDestination = destination;
+                showTripSetup();
+            } else {
+                alert("Please enter both Source and Destination.");
+            }
+        }
+
+        // Reads source city from the new input field instead of the card data
+        function handleGallerySelection(staticSourcePlaceholder, destination, budget) {
+            if (!currentUser) {
+                alert("Please log in or register first!");
+                showLogin();
+                return;
+            }
+            
+            // Read the user's preferred source city from the new input field
+            const userSourceInput = document.getElementById('preferred-source');
+            const userSource = userSourceInput.value.trim();
+
+            if (!userSource) {
+                alert("Please enter your Departure City above before selecting a destination.");
+                userSourceInput.focus();
+                return;
+            }
+
+            // Set the state based on gallery click, using the user-entered city
+            currentSource = userSource;
+            currentDestination = destination; 
+            
+            showTripSetup();
+
+            // Populate trip details form with pre-selected data
+            const budgetInput = document.getElementById('budget');
+            const destinationDisplay = document.getElementById('destination-display'); 
+            const sourceDisplay = document.getElementById('source-city'); 
+            
+            // Inject values
+            budgetInput.value = budget;
+            sourceDisplay.value = currentSource; // Now dynamic
+            destinationDisplay.value = destination; 
+
+            // Highlight the budget field
+            budgetInput.focus();
+            budgetInput.parentElement.classList.add('ring-2', 'ring-orange-500');
+            setTimeout(() => {
+                budgetInput.parentElement.classList.remove('ring-2', 'ring-orange-500');
+            }, 1500);
+        }
+        
+        function logout() {
+            currentUser = null;
+            sessionStorage.clear();
+            currentSource = null;
+            currentDestination = null;
+            showLanding();
+        }
+
+        function handleForgotPassword() {
+            alert("This is a demo. Please register a new account if you forgot your password.");
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-password-confirm').value;
+            const errorEl = document.getElementById('reg-error');
+
+            errorEl.classList.add('hidden');
+
+            if (localStorage.getItem(username)) {
+                errorEl.textContent = 'Username already exists.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorEl.textContent = 'Passwords do not match.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            if (password.length < 4) {
+                errorEl.textContent = 'Password must be at least 4 characters.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            localStorage.setItem(username, simpleHash(password));
+            document.getElementById('registerForm').reset();
+            alert(`Registration successful! Please log in.`);
+            currentUser = null;
+            showLogin(); 
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+
+            errorEl.classList.add('hidden');
+            const storedHash = localStorage.getItem(username);
+            const inputHash = simpleHash(password);
+
+            if (storedHash && storedHash == inputHash) {
+                currentUser = username;
+                document.getElementById('loginForm').reset();
+                
+                const savedTrip = sessionStorage.getItem(`tripData_${currentUser}`);
+                if (savedTrip) {
+                    tripData = JSON.parse(savedTrip);
+                    updateDashboardStats();
+                    renderTransactions();
+                    
+                    const savedName = sessionStorage.getItem(`tripName_${currentUser}`) || username;
+                    const savedMaskedAadhar = sessionStorage.getItem(`tripAadharMasked_${currentUser}`) || '****';
+                    currentSource = sessionStorage.getItem(`tripSource_${currentUser}`) || 'Source';
+                    currentDestination = sessionStorage.getItem(`tripDestination_${currentUser}`) || 'Destination';
+
+                    document.getElementById('dashboard-title').textContent = `${currentSource} → ${currentDestination}`;
+                    document.getElementById('display-name').textContent = savedName;
+                    document.getElementById('display-days').textContent = tripData.days;
+                    document.getElementById('display-id').textContent = savedMaskedAadhar;
+
+                    showDashboard(false);
+                } else {
+                    showDestinationSelection();
+                }
+            } else {
+                errorEl.textContent = 'Invalid username or password.';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function alertTerms(e) {
+            e.preventDefault();
+            alert("Data Privacy: All data is saved LOCALLY to your browser.");
+        }
+        
+        function handleTripFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const days = parseFloat(document.getElementById('days').value);
+            const budget = parseFloat(document.getElementById('budget').value);
+            const aadhar = document.getElementById('aadhar').value;
+            
+            if(budget <= 0 || days <= 0 || !currentDestination || !currentSource) {
+                alert("Please ensure budget, days, source, and destination are set.");
+                return;
+            }
+
+            tripData.budget = budget;
+            tripData.days = days;
+            tripData.spent = 0;
+            tripData.expenses = [];
+
+            const maskedId = aadhar.length > 4 ? "XX-" + aadhar.slice(-4) : aadhar;
+
+            document.getElementById('dashboard-title').textContent = `${currentSource} → ${currentDestination}`;
+            document.getElementById('display-name').textContent = name;
+            document.getElementById('display-days').textContent = days;
+            document.getElementById('display-id').textContent = maskedId;
+
+            sessionStorage.setItem(`tripData_${currentUser}`, JSON.stringify(tripData));
+            sessionStorage.setItem(`tripName_${currentUser}`, name);
+            sessionStorage.setItem(`tripAadharMasked_${currentUser}`, maskedId);
+            sessionStorage.setItem(`tripSource_${currentUser}`, currentSource);
+            sessionStorage.setItem(`tripDestination_${currentUser}`, currentDestination);
+
+            updateDashboardStats();
+            renderTransactions(); 
+            showDashboard();
+        }
+
+        // --- UPDATED EXPENSE LOGIC ---
+        function handleAddExpense(e) {
+            e.preventDefault();
+            
+            const categorySelect = document.getElementById('expense-category');
+            const descInput = document.getElementById('expense-desc');
+            const amountInput = document.getElementById('expense-amount');
+            
+            const category = categorySelect.value;
+            const desc = descInput.value;
+            const amount = parseFloat(amountInput.value);
+
+            if (!desc || amount <= 0) return;
+
+            // Add to state with Category
+            const newExpense = {
+                id: Date.now(),
+                category: category, 
+                desc: desc,
+                amount: amount,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+
+            tripData.expenses.unshift(newExpense); 
+            tripData.spent += amount;
+
+            sessionStorage.setItem(`tripData_${currentUser}`, JSON.stringify(tripData));
+
+            renderTransactions();
+            updateDashboardStats();
+
+            descInput.value = '';
+            amountInput.value = '';
+            categorySelect.value = 'General'; 
+            descInput.focus();
+        }
+
+        function deleteExpense(id) {
+            const expense = tripData.expenses.find(e => e.id === id);
+            if(expense) {
+                tripData.spent -= expense.amount;
+                tripData.expenses = tripData.expenses.filter(e => e.id !== id);
+                sessionStorage.setItem(`tripData_${currentUser}`, JSON.stringify(tripData));
+                renderTransactions();
+                updateDashboardStats();
+            }
+        }
+        
+        function updateDashboardStats() {
+            const remaining = tripData.budget - tripData.spent;
+            const validDays = tripData.days > 0 ? tripData.days : 1; 
+            const daily = remaining > 0 ? (remaining / validDays).toFixed(2) : 0;
+            
+            document.getElementById('display-total-budget').textContent = `₹${tripData.budget.toLocaleString()}`;
+            const elRemaining = document.getElementById('display-remaining');
+            elRemaining.textContent = `₹${remaining.toLocaleString()}`;
+            
+            if(remaining < 0) {
+                elRemaining.classList.remove('text-emerald-600');
+                elRemaining.classList.add('text-red-600');
+            } else {
+                elRemaining.classList.add('text-emerald-600');
+                elRemaining.classList.remove('text-red-600');
+            }
+
+            document.getElementById('display-daily').textContent = `₹${daily}`;
+            document.getElementById('expense-count').textContent = `${tripData.expenses.length} items`;
+
+            const percentRemaining = Math.max(0, (remaining / tripData.budget) * 100);
+            progressBar.style.width = `${percentRemaining}%`;
+            
+            if(percentRemaining < 20) progressBar.classList.replace('bg-emerald-500', 'bg-red-500');
+            else progressBar.classList.replace('bg-red-500', 'bg-emerald-500');
+        }
+        
+        // --- UPDATED RENDER FUNCTION WITH ICONS ---
+        function renderTransactions() {
+            transactionList.innerHTML = '';
+
+            if (tripData.expenses.length === 0) {
+                emptyState.style.display = 'flex';
+                return;
+            }
+            emptyState.style.display = 'none';
+
+            // Helper to get icon based on category
+            const getIcon = (cat) => {
+                switch(cat) {
+                    case 'Train': return 'train';
+                    case 'Bus': return 'bus';
+                    case 'Flight': return 'plane';
+                    case 'Cab': return 'car';
+                    case 'Fuel': return 'fuel';
+                    case 'Food': return 'coffee';
+                    case 'Stay': return 'bed';
+                    case 'Shopping': return 'shopping-bag';
+                    default: return 'banknote';
+                }
+            };
+
+            tripData.expenses.forEach(exp => {
+                const iconName = getIcon(exp.category);
+                const displayCategory = exp.category || 'General'; 
+
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center p-3 mb-2 bg-white/60 rounded-lg border border-white hover:bg-white/80 transition-colors fade-in';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="bg-orange-100 p-2 rounded-full text-orange-600">
+                            <i data-lucide="${iconName}" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">${displayCategory}</span>
+                                <p class="font-medium text-slate-800">${exp.desc}</p>
+                            </div>
+                            <p class="text-xs text-slate-500">${exp.time}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-bold text-slate-700">-₹${exp.amount.toFixed(2)}</span>
+                        <button onclick="deleteExpense(${exp.id})" class="text-slate-400 hover:text-red-500 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                transactionList.appendChild(item);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function resetApp() {
+            if(confirm("Edit plan? This clears expenses.")) {
+                sessionStorage.clear();
+                tripData.budget = 0;
+                tripData.spent = 0;
+                tripData.expenses = [];
+                currentSource = null;
+                currentDestination = null;
+                document.getElementById('tripForm').reset();
+                showDestinationSelection();
+            }
+        }
+
+        function printReport() {
+            window.print();
+        }
+        
+        window.onload = () => {
+            showLanding();
+        };
+
+    </script>
+</body>
+</html>
